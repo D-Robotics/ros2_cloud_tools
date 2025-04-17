@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-ASR节点 - PyAlsaAudio版本
-将PyAudio实现的ASR节点转换为使用PyAlsaAudio实现
-保持原有功能和运行逻辑，支持语音唤醒并发布识别结果
-"""
 import os
 import sys
 import time
@@ -19,7 +13,7 @@ from rclpy.parameter import Parameter
 colorama.init(autoreset=True)
 
 # --------------------------------------------
-#TODO 这是LWT个人账号开通的API Key 请不要泄露，防止余额被刷爆
+#TODO 这里填入dashscope的api key
 # 本来想要将API参数暴露出来，但是重要似乎必须在导入dashscope前设置API Key环境变量，否则会报错，还没想好怎么封装出去
 os.environ["DASHSCOPE_API_KEY"] = 'something'
 # --------------------------------------------
