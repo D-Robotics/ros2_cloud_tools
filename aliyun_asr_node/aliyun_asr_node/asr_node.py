@@ -187,13 +187,14 @@ class ASRNode(Node):
         self.declare_parameter('disable_pulseaudio', True)
         self.declare_parameter('audio_device', 'default')
         self.declare_parameter('waiting_timeout', 3.0)
-        
+        self.declare_parameter('pub_topic_name', 'asr_text')
         # 获取参数值
         awake_keyword = self.get_parameter('awake_keyword').value
         api_key = self.get_parameter('api_key').value
         disable_pulseaudio = self.get_parameter('disable_pulseaudio').value
         self.audio_device = self.get_parameter('audio_device').value
         waiting_timeout = self.get_parameter('waiting_timeout').value
+        result_publisher = self.get_parameter('pub_topic_name').value
         
         # 设置环境变量
         if disable_pulseaudio:
@@ -204,7 +205,7 @@ class ASRNode(Node):
         self.add_on_set_parameters_callback(self.parameters_callback)
         
         # 创建ROS发布者，用于发布识别到的文本
-        self.publisher = self.create_publisher(String, 'asr_text', 10)
+        self.publisher = self.create_publisher(String, result_publisher, 10)
         self.get_logger().info('ASR 节点启动成功。')
 
         # 创建ASR回调对象
