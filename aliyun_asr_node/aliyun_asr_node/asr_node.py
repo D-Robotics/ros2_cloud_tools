@@ -12,7 +12,7 @@ os.environ["PULSE_SERVER"] = ""
 # 初始化 colorama，用于彩色终端输出
 colorama.init(autoreset=True)
 #TODO 这是LWT个人账号开通的API Key 请不要泄露，防止余额被刷爆
-os.environ["DASHSCOPE_API_KEY"] = 'sk-5c3a3354fbbe4dcdb87d080f41154041'
+os.environ["DASHSCOPE_API_KEY"] = 'xxx'
 
 # 导入dashscope的ASR相关模块
 from dashscope.audio.asr import Recognition, RecognitionCallback, RecognitionResult
