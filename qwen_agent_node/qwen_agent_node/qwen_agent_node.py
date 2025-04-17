@@ -24,11 +24,18 @@ class QwenAgentNode(Node):
         self.agent.chat("你的名字叫“地瓜”,是一个由地瓜机器人公司开发的人工智能体!接下来与我对话的过程中,你的回答应该尽量控制在50字内,情感丰富,表现自然!同时你的回答中不应该包括'你好'这两个字")
         # CvBridge 用于 Image<->CV2 转换
         self.bridge = CvBridge()
+        # Declare parameters with default values
+        self.declare_parameter('asr_topic', '/asr_text')  # Default ASR topic name
+        self.declare_parameter('tts_topic', '/tts_text')  # Default TTS topic name
+
+        # Retrieve parameter values
+        asr_topic = self.get_parameter('asr_topic').get_parameter_value().string_value
+        tts_topic = self.get_parameter('tts_topic').get_parameter_value().string_value
 
         #TODO 订阅 ASR 文本话题
         self.asr_sub = self.create_subscription(
             String,
-            '/asr_text',
+            asr_topic,
             self.asr_callback,
             10
         )
@@ -40,7 +47,7 @@ class QwenAgentNode(Node):
             10
         )
         #TODO 发布 TTS 文本话题
-        self.tts_pub = self.create_publisher(String, '/tts_text', 10)
+        self.tts_pub = self.create_publisher(String, tts_topic, 10)
 
         self.get_logger().info('QwenAgentNode 已启动，等待 /asr_text 输入...')
 

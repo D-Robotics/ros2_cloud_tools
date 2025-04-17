@@ -5,7 +5,8 @@ from langchain.memory import ConversationBufferMemory, ConversationKGMemory, Con
 from langchain.prompts import ChatPromptTemplate
 # 自定义工具实现
 from .MyTools import get_current_time, observe_surroundings_with_camera
-os.environ["DASHSCOPE_API_KEY"] = 'sk-5c3a3354fbbe4dcdb87d080f41154041'
+#TODO now need this, please fill it!
+os.environ["DASHSCOPE_API_KEY"] = 'something'
 class QwenAgent:
     def __init__(self, use_memory: bool = True) -> None:
         """
