@@ -38,6 +38,7 @@ class ASRCallbackClass(RecognitionCallback):
         self.awake_keyword = "你好"  # 唤醒关键词
         self.awoken = False  # 是否已被唤醒
         self.device_name = "default"  # 音频设备名称
+        self.publisher = None
         
         # 新增音频缓冲区，用于积累数据到指定大小后再发送
         self.audio_buffer = bytearray()
@@ -132,6 +133,11 @@ class ASRCallbackClass(RecognitionCallback):
             # 检测到唤醒词，设置唤醒状态
             self.awoken = True
             print(colorama.Fore.BLUE + f"检测到唤醒词: {self.awake_keyword}")
+            # 发布唤醒词
+            if self.publisher is not None:
+                msg = String()
+                msg.data = self.awake_keyword
+                self.publisher.publish(msg)
             # 启动等待更多内容的计时器
             self.waiting_for_more = True
             self.waiting_start_time = time.time()
@@ -188,6 +194,8 @@ class ASRNode(Node):
         self.declare_parameter('audio_device', 'default')
         self.declare_parameter('waiting_timeout', 3.0)
         self.declare_parameter('pub_topic_name', 'asr_text')
+        self.declare_parameter('pub_awake_keyword', False)
+
         # 获取参数值
         awake_keyword = self.get_parameter('awake_keyword').value
         api_key = self.get_parameter('api_key').value
@@ -195,6 +203,7 @@ class ASRNode(Node):
         self.audio_device = self.get_parameter('audio_device').value
         waiting_timeout = self.get_parameter('waiting_timeout').value
         result_publisher = self.get_parameter('pub_topic_name').value
+        self.pub_awake_keyword = self.get_parameter('pub_awake_keyword').value
         
         # 设置环境变量
         if disable_pulseaudio:
@@ -214,6 +223,8 @@ class ASRNode(Node):
         self.asr_callback.awake_keyword = awake_keyword
         self.asr_callback.waiting_timeout = waiting_timeout
         self.asr_callback.device_name = self.audio_device
+        if self.pub_awake_keyword:
+            self.asr_callback.publisher = self.publisher
         
         # 标记识别器状态
         self.recognition_running = False
