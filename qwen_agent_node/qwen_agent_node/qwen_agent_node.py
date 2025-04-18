@@ -4,9 +4,10 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge
-
+import cv2
+import numpy as np
 # 导入 QwenAgent 和 MyTools.set_camera_image
 from .QwenLangchain import QwenAgent
 from .MyTools import set_camera_image
@@ -27,11 +28,14 @@ class QwenAgentNode(Node):
         # Declare parameters with default values
         self.declare_parameter('asr_topic', '/asr_text')  # Default ASR topic name
         self.declare_parameter('tts_topic', '/tts_text')  # Default TTS topic name
-
+        self.declare_parameter('image_topic', '/publish_image_source')  # Default TTS topic name
+        self.declare_parameter('use_compressed', False) 
         # Retrieve parameter values
         asr_topic = self.get_parameter('asr_topic').get_parameter_value().string_value
         tts_topic = self.get_parameter('tts_topic').get_parameter_value().string_value
-
+        image_topic = self.get_parameter('image_topic').get_parameter_value().string_value
+        self.get_logger().info(rf'现在使用的asr_topic: {asr_topic}, 现在使用的tts_topic: {tts_topic}, 现在使用的image_topic: {image_topic}')
+        self.use_compressed = self.get_parameter('use_compressed').value 
         #TODO 订阅 ASR 文本话题
         self.asr_sub = self.create_subscription(
             String,
@@ -40,12 +44,22 @@ class QwenAgentNode(Node):
             10
         )
         #TODO 订阅 相机图像话题
-        self.image_sub = self.create_subscription(
-            Image,
-            '/publish_image_source',
-            self.image_callback,
-            10
-        )
+        if self.use_compressed:
+            self.get_logger().info('使用 CompressedImage 话题订阅 JPEG 数据')
+            self.create_subscription(
+                CompressedImage,
+                image_topic,
+                self.compressed_image_callback,
+                10
+            )
+        else:
+            self.get_logger().info('使用 Image 话题订阅原始像素数据')
+            self.create_subscription(
+                Image,
+                image_topic,
+                self.image_callback,
+                10
+            )
         #TODO 发布 TTS 文本话题
         self.tts_pub = self.create_publisher(String, tts_topic, 10)
 
@@ -78,6 +92,18 @@ class QwenAgentNode(Node):
             set_camera_image(cv_image)
         except Exception as e:
             self.get_logger().error(f"图像转换失败: {e}")
+    
+    def compressed_image_callback(self, msg: CompressedImage):
+        """处理 sensor_msgs/CompressedImage（JPEG 格式）消息"""
+        try:
+            # ROS2 CompressedImage.data 在 Python 中是 List[int]
+            np_arr = np.array(msg.data, dtype=np.uint8)
+            cv_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            if cv_img is None:
+                raise RuntimeError("JPEG 解码失败")
+            set_camera_image(cv_img)
+        except Exception as e:
+            self.get_logger().error(f"CompressedImage 回调失败: {e}")
 
 def main(args=None):
     rclpy.init(args=args)

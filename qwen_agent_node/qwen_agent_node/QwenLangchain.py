@@ -5,15 +5,14 @@ from langchain.memory import ConversationBufferMemory, ConversationKGMemory, Con
 from langchain.prompts import ChatPromptTemplate
 # 自定义工具实现
 from .MyTools import get_current_time, observe_surroundings_with_camera
-#TODO now need this, please fill it!
-os.environ["DASHSCOPE_API_KEY"] = 'something'
+
 class QwenAgent:
     def __init__(self, use_memory: bool = True) -> None:
         """
         初始化 QwenAgent，包括 LLM、工具列表、记忆和提示模板。
         """
         # 1. 初始化 LLM，model 参数根据需要可修改
-        print(rf"api_key: {os.environ['DASHSCOPE_API_KEY']}")
+        # print(rf"api_key: {os.environ['DASHSCOPE_API_KEY']}")
         self.llm = ChatTongyi(model="qwen-plus", api_key=os.environ["DASHSCOPE_API_KEY"])  
 
         # 2. 准备 Memory（可选）

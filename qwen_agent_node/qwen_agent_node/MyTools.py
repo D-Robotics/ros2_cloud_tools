@@ -23,7 +23,7 @@ class ObserveArgs(BaseModel):
 
 # === 重构 observe_surroundings 工具 ===
 @tool(
-    description="通过上游话题 /publish_image_source 获取一张图像，并在 60 字内描述画面内容。调用前请发送 'start'。",
+    description="通过上游话题 /publish_image 获取一张图像，并且可以得到描述画面的内容。调用前请发送 'start'。",
     return_direct=False,
     args_schema=ObserveArgs
 )
@@ -35,24 +35,24 @@ def observe_surroundings_with_camera(prompt: str) -> str:
         return "要开始观察，请输入 'start'。"
 
     if last_image is None:
-        return "尚未收到图像，请检查 /publish_image_source 话题是否有发布。"
+        return "尚未收到图像，请检查 /publish_image 话题是否有发布。"
 
     # 拷贝并调整大小为 (448, 448)
     frame = last_image.copy()
     frame = resize(frame, (448, 448))
 
     # 保存临时文件
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = "/app/FSR-AiProject/FsrAiAgent/ros_node"
-    os.makedirs(output_dir, exist_ok=True)
-    image_path = os.path.join(output_dir, f"captured_{timestamp}.jpg")
+    # output_dir = "/app"
+    # os.makedirs(output_dir, exist_ok=True)
+    # image_path = os.path.join(output_dir, f"captured4vllm.jpg")
+    image_path = "captured4vllm.jpg"
     from cv2 import imwrite
     imwrite(image_path, frame)
 
     # 调用多模态模型进行描述
     image_uri = f"file://{image_path}"
     messages = [
-        {"role": "system", "content": [{"text": "You are a helpful assistant."}]},
+        {"role": "system", "content": [{"text": "You are an assistant skilled in interpreting images."}]},
         {"role": "user", "content": [{"image": image_uri}, {"text": "请简要描述图像内容，控制在60字内。"}]}
     ]
     resp = MultiModalConversation.call(
