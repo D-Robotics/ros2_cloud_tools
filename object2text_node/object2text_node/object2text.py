@@ -27,6 +27,7 @@ class Object2TextNode(Node):
         # detection_count: 已经收集到的DOSOD检测结果条数
         # obj_counter: 用于记录各类别检测到的最大数量
         self.active = False
+        self.english = False
         self.detection_count = 0
         self.obj_counter = Counter()
 
@@ -102,13 +103,46 @@ class Object2TextNode(Node):
         1) active设为True, 表示接下来需要处理DOSOD检测结果。
         2) 重置detection_count和obj_counter。
         """
-        if self.key_word not in msg.data:
+        if self.key_word != "" and self.key_word not in msg.data:
             self.get_logger().info(f'收到新的ASR文本: "{msg.data}", 但不包含提示词: [{self.key_word}]')
             return
         self.get_logger().info(f'收到新的ASR文本: "{msg.data}", 即将开始收集DOSOD检测结果。')
+        self.english = False
+        if "English" in msg.data or "english" in msg.data or "英文" in msg.data or "英语" in msg.data:
+            self.english = True
         self.active = True
         self.detection_count = 0
         self.obj_counter.clear()
+
+    def number_to_words(self, num):
+        if num < 0 or num > 9999:
+            return "Number out of range"
+
+        ones = ["zero", "one", "two", "three", "four", "five", "six",
+                "seven", "eight", "nine"]
+        teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+                 "sixteen", "seventeen", "eighteen", "nineteen"]
+        tens = ["", "", "twenty", "thirty", "forty", "fifty",
+                "sixty", "seventy", "eighty", "ninety"]
+
+        def two_digits(n):
+            if n < 10:
+                return ones[n]
+            elif 10 <= n < 20:
+                return teens[n - 10]
+            else:
+                return tens[n // 10] + ('' if n % 10 == 0 else '-' + ones[n % 10])
+
+        def three_digits(n):
+            if n < 100:
+                return two_digits(n)
+            else:
+                return ones[n // 100] + ' hundred' + ('' if n % 100 == 0 else ' and ' + two_digits(n % 100))
+
+        if num < 1000:
+            return three_digits(num)
+        else:
+            return ones[num // 1000] + ' thousand' + ('' if num % 1000 == 0 else ' ' + three_digits(num % 1000))
 
     def listener_callback(self, msg: PerceptionTargets):
         """
@@ -161,24 +195,42 @@ class Object2TextNode(Node):
         # 拼装句子，示例格式：
         # “我好像看到了三个人，还有一个泰迪熊，还有一本书哦！”
         sentence_parts = []
-        for i, (obj_type, count) in enumerate(self.obj_counter.items()):
-            # 翻译成中文类别
-            ch_type = self.category_map.get(obj_type, obj_type)  # 若没翻译就用原名
+        if not self.english:
+            for i, (obj_type, count) in enumerate(self.obj_counter.items()):
+                # 翻译成中文类别
+                ch_type = self.category_map.get(obj_type, obj_type)  # 若没翻译就用原名
 
-            # 转换数字 => 中文数词（<1000）
-            count_str = self.number_to_chinese(count)
+                # 转换数字 => 中文数词（<1000）
+                count_str = self.number_to_chinese(count)
 
-            part_text = f"{count_str}个{ch_type}"
-            sentence_parts.append(part_text)
+                part_text = f"{count_str}个{ch_type}"
+                sentence_parts.append(part_text)
 
-        if len(sentence_parts) == 1:
-            # 只有一种物体
-            final_sentence = f"我看到了 {sentence_parts[0]}！"
+            if len(sentence_parts) == 1:
+                # 只有一种物体
+                final_sentence = f"我看到了 {sentence_parts[0]}！"
+            else:
+                # 多种物体，用"、"做分隔
+                middle_text = "、".join(sentence_parts[:-1])  # 前面拼在一起
+                final_sentence = f"我看到 {middle_text}，还有 {sentence_parts[-1]}！"
         else:
-            # 多种物体，用"、"做分隔
-            middle_text = "、".join(sentence_parts[:-1])  # 前面拼在一起
-            final_sentence = f"我看到 {middle_text}，还有 {sentence_parts[-1]}！"
+            for i, (obj_type, count) in enumerate(self.obj_counter.items()):
+                # 翻译成中文类别
+                ch_type = obj_type  
 
+                # 转换数字 => 中文数词（<1000）
+                count_str = self.number_to_words(count)
+
+                part_text = f"{count_str} {ch_type}"
+                sentence_parts.append(part_text)
+
+            if len(sentence_parts) == 1:
+                # 只有一种物体
+                final_sentence = f"There is a {sentence_parts[0]}."
+            else:
+                # 多种物体，用"、"做分隔
+                middle_text = ", ".join(sentence_parts[:-1])  # 前面拼在一起
+                final_sentence = f"There are {middle_text}，and {sentence_parts[-1]}."
         self.publish_result(final_sentence)
 
     def publish_result(self, text: str):
