@@ -106,7 +106,7 @@ class Object2TextNode(Node):
         if self.key_word != "" and self.key_word not in msg.data:
             self.get_logger().info(f'收到新的ASR文本: "{msg.data}", 但不包含提示词: [{self.key_word}]')
             return
-        self.get_logger().info(f'收到新的ASR文本: "{msg.data}", 即将开始收集DOSOD检测结果。')
+        self.get_logger().warn(f'收到新的ASR文本: "{msg.data}", 即将开始收集DOSOD检测结果。')
         self.english = False
         if "English" in msg.data or "english" in msg.data or "英文" in msg.data or "英语" in msg.data:
             self.english = True
@@ -240,7 +240,7 @@ class Object2TextNode(Node):
         msg = String()
         msg.data = text
         self.publisher.publish(msg)
-        self.get_logger().info(f'已发布结果: {text}')
+        self.get_logger().warn(f'已发布结果: {text}')
 
     def number_to_chinese(self, num: int) -> str:
         """

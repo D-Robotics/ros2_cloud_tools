@@ -17,11 +17,12 @@ class AliyunTTSNode(Node):
         self.declare_parameter('cosy_model', 'cosyvoice-v1')
         self.declare_parameter('cosy_voice', 'loongstella')
         self.declare_parameter('sambert_model', 'sambert-zhimiao-emo-v1')
+        self.declare_parameter('audio_device', 'plughw:0,0')
 
         # 获取参数
         p = self.get_parameters([
             'tts_method','text_topic','result_topic',
-            'cosy_model','cosy_voice','sambert_model'
+            'cosy_model','cosy_voice','sambert_model','audio_device'
         ])
         self.tts_method  = p[0].get_parameter_value().string_value
         self.text_topic  = p[1].get_parameter_value().string_value
@@ -29,6 +30,7 @@ class AliyunTTSNode(Node):
         self.cosy_model  = p[3].get_parameter_value().string_value
         self.cosy_voice  = p[4].get_parameter_value().string_value
         self.sambert_model= p[5].get_parameter_value().string_value
+        self.audio_device= p[6].get_parameter_value().string_value
 
         # 订阅输入文本，发布音频文件路径
         self.sub = self.create_subscription(
@@ -58,7 +60,7 @@ class AliyunTTSNode(Node):
                 continue
             self.get_logger().info(f"开始播放: {filepath}")
             try:
-                subprocess.run(['aplay', filepath], check=True)
+                subprocess.run(['aplay', '-D', self.audio_device, filepath], check=True)
                 self.get_logger().info("播放完毕")
             except Exception as e:
                 self.get_logger().error(f"播放失败: {e}")
@@ -68,7 +70,7 @@ class AliyunTTSNode(Node):
         text = msg.data.strip()
         if not text:
             return
-        self.get_logger().info(f"收到文本: “{text}”")
+        self.get_logger().warn(f"收到文本: “{text}”")
         try:
             if self.tts_method == 'cosyvoice':
                 audio = self._cosy(text)
