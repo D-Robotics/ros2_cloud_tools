@@ -32,6 +32,8 @@ class AliyunTTSNode(Node):
         self.sambert_model= p[5].get_parameter_value().string_value
         self.audio_device= p[6].get_parameter_value().string_value
 
+        self.count = 0
+        os.system("rm -rf *.wav")
         # 订阅输入文本，发布音频文件路径
         self.sub = self.create_subscription(
             String, self.text_topic, self.on_text, 10)
@@ -83,7 +85,8 @@ class AliyunTTSNode(Node):
             return
 
         # 统一写到同一个文件
-        filename = "latest_tts.wav"
+        filename = "latest_tts" + str(self.count) + ".wav"
+        self.count += 1
         filepath = os.path.join(os.getcwd(), filename)
         with open(filepath, 'wb') as f:
             f.write(audio)
