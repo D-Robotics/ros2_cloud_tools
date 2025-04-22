@@ -1,6 +1,7 @@
 <h1 style="color:#99FF66; text-shadow:2px 2px #000; text-align: center;">
   👀💻 qwen_agent_node (ROS 2) 🧰🤖
 </h1>
+
 [查看中文版本](README_CN.md)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) A ROS 2 node that implements a conversational agent named "地瓜" powered by Alibaba Cloud's Qwen large language model (LLM) via the DashScope API and orchestrated using LangChain. This node listens for text input (e.g., from Automatic Speech Recognition - ASR), incorporates visual context from a camera image topic, generates conversational responses considering its persona and memory, and publishes the responses as text (e.g., for Text-To-Speech - TTS).
