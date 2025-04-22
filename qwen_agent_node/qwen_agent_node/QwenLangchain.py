@@ -1,7 +1,7 @@
 import os 
 from langchain_community.chat_models.tongyi import ChatTongyi 
 from langchain.agents import initialize_agent, AgentType
-from langchain.memory import ConversationBufferMemory, ConversationKGMemory, ConversationSummaryMemory
+from langchain.memory import ConversationBufferMemory #you can also use ConversationKGMemory, ConversationSummaryMemory
 from langchain.prompts import ChatPromptTemplate
 # 自定义工具实现
 from .MyTools import get_current_time, observe_surroundings_with_camera
