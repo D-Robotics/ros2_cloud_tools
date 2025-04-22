@@ -6,21 +6,12 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 import colorama
-import ctypes
 from rclpy.parameter import Parameter
 
 # 初始化 colorama，用于彩色终端输出
 colorama.init(autoreset=True)
-
-# --------------------------------------------
-#TODO 这里填入dashscope的api key
-# 本来想要将API参数暴露出来，但是重要似乎必须在导入dashscope前设置API Key环境变量，否则会报错，还没想好怎么封装出去
-os.environ["DASHSCOPE_API_KEY"] = 'something'
-# --------------------------------------------
-from dashscope.audio.asr import RecognitionCallback, RecognitionResult
-# 导入dashscope的ASR相关模块
-
-
+#TODO 重要!!! 必须在导入dashscope前设置API Key环境变量，否则会报错，所以要记得export环境变量
+from dashscope.audio.asr import Recognition, RecognitionCallback, RecognitionResult # 导入dashscope的ASR相关模块
 
 class ASRCallbackClass(RecognitionCallback):
     """
@@ -189,7 +180,7 @@ class ASRNode(Node):
         
         # 声明ROS参数
         self.declare_parameter('awake_keyword', '你好')
-        self.declare_parameter('api_key', 'something')
+        # self.declare_parameter('api_key', 'something')
         self.declare_parameter('disable_pulseaudio', True)
         self.declare_parameter('audio_device', 'default')
         self.declare_parameter('waiting_timeout', 3.0)
@@ -198,14 +189,14 @@ class ASRNode(Node):
 
         # 获取参数值
         awake_keyword = self.get_parameter('awake_keyword').value
-        api_key = self.get_parameter('api_key').value
+        # api_key = self.get_parameter('api_key').value
         disable_pulseaudio = self.get_parameter('disable_pulseaudio').value
         self.audio_device = self.get_parameter('audio_device').value
         waiting_timeout = self.get_parameter('waiting_timeout').value
         result_publisher = self.get_parameter('pub_topic_name').value
         self.pub_awake_keyword = self.get_parameter('pub_awake_keyword').value
-        
-        # 设置环境变量
+        print(rf"当前使用的音频设备: {self.audio_device}, 当前使用的唤醒词: {awake_keyword}, 当前使用的发布话题: {result_publisher}")
+        # 设置环境变量, 屏蔽掉PulseMusic
         if disable_pulseaudio:
             os.environ["PULSE_SERVER"] = ""
         # os.environ["DASHSCOPE_API_KEY"] = api_key
@@ -228,7 +219,6 @@ class ASRNode(Node):
         
         # 标记识别器状态
         self.recognition_running = False
-        from dashscope.audio.asr import Recognition, RecognitionCallback, RecognitionResult
         # 初始化识别器
         self.recognition = Recognition(
             model='paraformer-realtime-v1',  # 使用实时语音识别模型
@@ -259,7 +249,6 @@ class ASRNode(Node):
     def parameters_callback(self, params):
         """
         参数回调函数，当ROS参数被修改时调用
-        
         Args:
             params: 被修改的参数列表
         
@@ -385,7 +374,6 @@ class ASRNode(Node):
 def main(args=None):
     """
     主函数，启动ROS节点并进入事件循环
-    
     Args:
         args: 命令行参数
     """

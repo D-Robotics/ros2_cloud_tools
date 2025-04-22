@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# qwen_agent_node.py
-
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -29,13 +26,13 @@ class QwenAgentNode(Node):
         self.declare_parameter('asr_topic', '/asr_text')  # Default ASR topic name
         self.declare_parameter('tts_topic', '/tts_text')  # Default TTS topic name
         self.declare_parameter('image_topic', '/publish_image_source')  # Default TTS topic name
-        self.declare_parameter('use_compressed', False) 
+        self.declare_parameter('use_compressed', True) 
         # Retrieve parameter values
         asr_topic = self.get_parameter('asr_topic').get_parameter_value().string_value
         tts_topic = self.get_parameter('tts_topic').get_parameter_value().string_value
         image_topic = self.get_parameter('image_topic').get_parameter_value().string_value
-        self.get_logger().info(rf'现在使用的asr_topic: {asr_topic}, 现在使用的tts_topic: {tts_topic}, 现在使用的image_topic: {image_topic}')
         self.use_compressed = self.get_parameter('use_compressed').value 
+        self.get_logger().info(rf'现在使用的asr_topic: {asr_topic}, 现在使用的tts_topic: {tts_topic}, 现在使用的image_topic: {image_topic}, 是否使用use_compressed: {self.use_compressed}')
         #TODO 订阅 ASR 文本话题
         self.asr_sub = self.create_subscription(
             String,
@@ -43,7 +40,7 @@ class QwenAgentNode(Node):
             self.asr_callback,
             10
         )
-        #TODO 订阅 相机图像话题
+        #TODO 订阅 相机图像话题    
         if self.use_compressed:
             self.get_logger().info('使用 CompressedImage 话题订阅 JPEG 数据')
             self.create_subscription(

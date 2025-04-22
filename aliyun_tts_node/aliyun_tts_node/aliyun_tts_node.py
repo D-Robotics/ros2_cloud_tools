@@ -11,7 +11,7 @@ class AliyunTTSNode(Node):
     def __init__(self):
         super().__init__('aliyun_tts_node')
         # 声明参数及默认值
-        self.declare_parameter('tts_method', 'cosyvoice')       # cosyvoice or sambert
+        self.declare_parameter('tts_method', 'sambert')       # cosyvoice or sambert
         self.declare_parameter('text_topic', '/tts_input')
         self.declare_parameter('result_topic', '/tts_output')
         self.declare_parameter('cosy_model', 'cosyvoice-v1')
@@ -32,6 +32,8 @@ class AliyunTTSNode(Node):
         self.sambert_model= p[5].get_parameter_value().string_value
         self.audio_device= p[6].get_parameter_value().string_value
 
+        print(f"当前的tts_method={self.tts_method}, 当前的text_topic={self.text_topic}, 当前的audio_device={self.audio_device}")
+        
         self.count = 0
         os.system("rm -rf *.wav")
         # 订阅输入文本，发布音频文件路径
