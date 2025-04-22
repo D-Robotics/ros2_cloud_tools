@@ -1,4 +1,7 @@
-# aliyun_tts_node (ROS 2)
+<h1 style="color:#E91E63; text-shadow:2px 2px #000; text-align: center;">
+  🚀 aliyun_tts_node (ROS 2) 🚀
+</h1>
+[查看中文版本](README_CN.md)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) A ROS 2 node that provides Text-To-Speech (TTS) functionality using Alibaba Cloud's DashScope API. It subscribes to a text topic, synthesizes speech using the specified engine (***Sambert*** or ***CosyVoice***), and publishes the resulting audio data to another topic.
 
@@ -31,7 +34,6 @@
    Source your workspace's setup file:
    ```bash
    source install/setup.bash
-   # Or setup.zsh / setup.bat depending on your shell/OS
    ```
 
 ## Configuration
@@ -62,7 +64,8 @@ export DASHSCOPE_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' # Replace with yo
 
 `cosy_mode` and `cosy_voice` ***only work*** if you select `sambert` as `tts_method`
 
-```
+```bash
+# Use Cosyvoice
 ros2 run aliyun_tts_node aliyun_tts_node \
   --ros-args \
   -p tts_method:=cosyvoice \
@@ -73,7 +76,8 @@ ros2 run aliyun_tts_node aliyun_tts_node \
 
 
 
-```
+```bash
+# Use Samberts
 ros2 run aliyun_tts_node aliyun_tts_node \
   --ros-args \
   -p tts_method:=sambert \

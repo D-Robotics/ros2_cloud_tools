@@ -1,4 +1,8 @@
-# aliyun_asr_node (ROS 2)
+<h1 style="color:#00CCFF; text-shadow:2px 2px #000; text-align: center;">
+  🤖 aliyun_asr_node (ROS 2) 👂
+</h1>
+
+[查看中文版本](README_CN.md)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) A ROS 2 node for real-time Automatic Speech Recognition (ASR) using Alibaba Cloud's DashScope service (`paraformer-realtime-v1`). It listens continuously to an audio input device using `pyalsaaudio`, detects a configurable wake word, captures subsequent speech within a timeout, sends it to DashScope for recognition, and publishes the resulting text to a ROS topic.
 
