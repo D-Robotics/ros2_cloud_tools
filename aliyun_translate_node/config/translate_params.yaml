@@ -1,0 +1,12 @@
+aliyun_translate_node:
+  ros__parameters:
+    api_key: ""  # 留空使用环境变量
+    model: "qwen-mt-turbo"
+    source_lang: "auto"
+    target_lang: "English" 
+    input_topic: "text_to_translate"
+    output_topic: "translated_text"
+    result_format: "message"
+    enable_cache: true
+    max_retry_count: 3
+    retry_delay: 1.0
