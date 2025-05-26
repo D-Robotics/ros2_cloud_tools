@@ -70,6 +70,7 @@ export DASHSCOPE_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' # Replace with yo
 
 The node supports multiple languages including:
 
+- `auto` (输入语言可选)
 - `Chinese` (中文)
 - `English` (英文)
 - `Japanese` (日文)
