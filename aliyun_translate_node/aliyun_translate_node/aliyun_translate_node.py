@@ -13,8 +13,6 @@ from std_msgs.msg import String
 from rclpy.parameter import Parameter
 import dashscope
 import colorama
-
-# 初始化 colorama，用于彩色终端输出
 colorama.init(autoreset=True)
 
 
@@ -27,8 +25,7 @@ class AliyunTranslateNode(Node):
     def __init__(self):
         """初始化翻译节点，设置参数、订阅者和发布者"""
         super().__init__('aliyun_translate_node')
-        
-        # 声明ROS参数，提供灵活的配置选项
+
         self.declare_parameter('api_key', '')  # DASHSCOPE API Key，为空时使用环境变量
         self.declare_parameter('model', 'qwen-mt-turbo')  # 翻译模型名称
         self.declare_parameter('source_lang', 'auto')  # 源语言，auto为自动检测
@@ -39,8 +36,7 @@ class AliyunTranslateNode(Node):
         self.declare_parameter('enable_cache', True)  # 是否启用翻译缓存
         self.declare_parameter('max_retry_count', 3)  # 最大重试次数
         self.declare_parameter('retry_delay', 1.0)  # 重试延迟时间(秒)
-        
-        # 获取参数值
+
         self.api_key = self.get_parameter('api_key').value
         self.model = self.get_parameter('model').value
         self.source_lang = self.get_parameter('source_lang').value
@@ -78,7 +74,7 @@ class AliyunTranslateNode(Node):
             10  # 队列大小
         )
         
-        # 创建发布者，发布翻译结果
+        # 发布翻译结果
         self.publisher = self.create_publisher(String, self.output_topic, 10)
         
         # 翻译缓存，避免重复翻译相同内容
@@ -106,7 +102,7 @@ class AliyunTranslateNode(Node):
             bool: API Key是否有效
         """
         try:
-            # 尝试进行一个简单的翻译请求来验证API Key
+            # 进行一个简单的翻译请求来验证API Key
             test_messages = [{"role": "user", "content": "test"}]
             test_options = {
                 "source_lang": "auto",
