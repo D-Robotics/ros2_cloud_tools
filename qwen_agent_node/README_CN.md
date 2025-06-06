@@ -52,7 +52,7 @@ export DASHSCOPE_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'  # 替换为你�
 | `asr_topic`      | 订阅的用户文本输入话题（例如来自 ASR）（`std_msgs/msg/String`）。 | string  | `/asr_text`             |
 | `tts_topic`      | 发布代理生成的文本回复话题（例如用于 TTS）（`std_msgs/msg/String`）。 | string  | `/tts_text`             |
 | `image_topic`    | 订阅的摄像头图像输入话题。                                   | string  | `/publish_image_source` |
-| `use_compressed` | 若为 `true`，以 `sensor_msgs/msg/CompressedImage`（如 JPEG）格式订阅 `image_topic`；若为 `false`，使用 `sensor_msgs/msg/Image`。 | boolean | `True`                  |
+| `use_compressed` | 若为 `true`，以 `sensor_msgs/msg/CompressedImage`（如 JPEG）格式订阅 `image_topic`；若为 `false`，使用 `sensor_msgs/msg/Image`。例如RealSense的RGB图像 | boolean | `True`                  |
 
 ## 使用示例
 
