@@ -5,42 +5,59 @@ from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
-# 导入 QwenAgent 和 MyTools.set_camera_image
+# 导入 QwenAgent 和 MyTools
 from .QwenLangchain import QwenAgent
-from .MyTools import set_camera_image
+from .MyTools import set_camera_image, set_bbox_publisher  # 添加 set_bbox_publisher
+
 class QwenAgentNode(Node):
     """
     ROS2 节点：订阅 /asr_text （语音识别文本），调用 QwenAgent.chat 获取回复，
     并发布到 /tts_text；同时订阅 /publish_image_source （图像数据），
     将其转换为 OpenCV 图像传给 MyTools。
+    新增功能：发布物体检测结果到 /detect_bbox
     """
     def __init__(self):
         super().__init__('qwen_agent_node')
 
         # 初始化 QwenAgent（开启对话记忆）
         self.agent = QwenAgent(use_memory=True)
-        self.agent.chat("你的名字叫“地瓜”,是一个由地瓜机器人公司开发的人工智能体!接下来与我对话的过程中,你的回答应该尽量控制在50字内,情感丰富,表现自然!同时你的回答中不应该包括'你好'这两个字")
+        self.agent.chat(rf"接下来与我对话的过程中,你可能会使用到与camera有关的工具。你的回答应该尽量控制在50字内,情感丰富,表现自然!同时你的回答中不应该包括'你好'这两个字")
+        
         # CvBridge 用于 Image<->CV2 转换
         self.bridge = CvBridge()
+        
         # Declare parameters with default values
         self.declare_parameter('asr_topic', '/asr_text')  # Default ASR topic name
         self.declare_parameter('tts_topic', '/tts_text')  # Default TTS topic name
-        self.declare_parameter('image_topic', '/publish_image_source')  # Default TTS topic name
+        self.declare_parameter('image_topic', '/publish_image_source')  # Default image topic name
+        self.declare_parameter('bbox_topic', '/detect_bbox')  # Default bbox topic name
         self.declare_parameter('use_compressed', True) 
+        
         # Retrieve parameter values
         asr_topic = self.get_parameter('asr_topic').get_parameter_value().string_value
         tts_topic = self.get_parameter('tts_topic').get_parameter_value().string_value
         image_topic = self.get_parameter('image_topic').get_parameter_value().string_value
+        bbox_topic = self.get_parameter('bbox_topic').get_parameter_value().string_value
         self.use_compressed = self.get_parameter('use_compressed').value 
-        self.get_logger().info(rf'现在使用的asr_topic: {asr_topic}, 现在使用的tts_topic: {tts_topic}, 现在使用的image_topic: {image_topic}, 是否使用use_compressed: {self.use_compressed}')
-        #TODO 订阅 ASR 文本话题
+        
+        self.get_logger().info(
+            f'配置信息:\n'
+            f'  ASR话题: {asr_topic}\n'
+            f'  TTS话题: {tts_topic}\n'
+            f'  图像话题: {image_topic}\n'
+            f'  BBox话题: {bbox_topic}\n'
+            f'  使用压缩图像: {self.use_compressed}'
+        )
+        
+        # 订阅 ASR 文本话题
         self.asr_sub = self.create_subscription(
             String,
             asr_topic,
             self.asr_callback,
             10
         )
-        #TODO 订阅 相机图像话题    
+        
+        # 订阅 相机图像话题    
         if self.use_compressed:
             self.get_logger().info('使用 CompressedImage 话题订阅 JPEG 数据')
             self.create_subscription(
@@ -57,10 +74,17 @@ class QwenAgentNode(Node):
                 self.image_callback,
                 10
             )
-        #TODO 发布 TTS 文本话题
+        
+        # 发布 TTS 文本话题
         self.tts_pub = self.create_publisher(String, tts_topic, 10)
-
-        self.get_logger().info('QwenAgentNode 已启动，等待 /asr_text 输入...')
+        
+        # 发布 Detection2DArray 话题（物体检测结果）
+        self.bbox_pub = self.create_publisher(String, "/detect_bbox", 10)
+        
+        # 将发布器设置到 MyTools 模块中
+        set_bbox_publisher(self.bbox_pub)
+        
+        self.get_logger().info('QwenAgentNode 已启动，等待输入...')
 
     def asr_callback(self, msg: String):
         text = msg.data.strip()
@@ -68,12 +92,14 @@ class QwenAgentNode(Node):
             return
 
         self.get_logger().info(f"[ASR] 收到: {text}")
+        
         # 调用 QwenAgent 进行对话
         try:
             reply = self.agent.chat(text)
         except Exception as e:
             self.get_logger().error(f"调用 QwenAgent 出错: {e}")
             reply = "对不起，内部出错。"
+        
         # 发布回复
         out_msg = String()
         out_msg.data = reply

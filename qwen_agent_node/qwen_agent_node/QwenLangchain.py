@@ -4,7 +4,7 @@ from langchain.agents import initialize_agent, AgentType
 from langchain.memory import ConversationBufferMemory #you can also use ConversationKGMemory, ConversationSummaryMemory
 from langchain.prompts import ChatPromptTemplate
 # 自定义工具实现
-from .MyTools import get_current_time, observe_surroundings_with_camera
+from .MyTools import get_current_time, observe_surroundings_with_camera, detect_objects_with_camera
 
 class QwenAgent:
     def __init__(self, use_memory: bool = True) -> None:
@@ -27,8 +27,9 @@ class QwenAgent:
 
         # 3. 定义 Tools 列表
         self.tools = [
-            get_current_time,
             observe_surroundings_with_camera,
+            detect_objects_with_camera,
+            get_current_time
         ]
 
         # 4. 构建 PromptTemplate：包含系统角色、会话历史占位符和用户输入
