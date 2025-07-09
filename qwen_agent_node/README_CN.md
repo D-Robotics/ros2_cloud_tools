@@ -1,8 +1,8 @@
 <h1 style="color:#99FF66; text-shadow:2px 2px #000; text-align: center;">
   👀💻 qwen_agent_node (ROS 2) 🧰🤖
 </h1>
-[![许可证](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)  
-一个 ROS 2 节点，创建了一个名为“地瓜”的代理，通过阿里云 DashScope API 调用 Qwen 大语言模型（LLM），并结合 LangChain 进行编排。该节点监听文本输入（如来自 ASR），订阅摄像头图像话题获取视觉上下文，结合代理的个性和记忆生成对话回复，并将回复以文本形式发布（可供 TTS 使用）。
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 一个 ROS 2 节点，创建了一个名为“地瓜”的代理，通过阿里云 DashScope API 调用 Qwen 大语言模型（LLM），并结合 LangChain 进行编排。该节点监听文本输入（如来自 ASR），订阅摄像头图像话题获取视觉上下文，结合代理的个性和记忆生成对话回复，并将回复以文本形式发布（可供 TTS 使用）。
 
 ## 功能特点
 
