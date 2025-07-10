@@ -12,3 +12,7 @@ Before running any nodes in this package, you **MUST** set your DashScope API ke
 export DASHSCOPE_API_KEY='sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' # Replace with your actual key
 ```
 ### 
+API-KEY可以在以下这个网站中，查看或者申请
+```bash
+https://bailian.console.aliyun.com/?tab=model#/api-key
+```
