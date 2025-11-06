@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>object2text_node</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>This Package use Aliyun Paraformer to provide ASR service.
   Once the node is started, it will continue to listen until a sentence is recognized and published as text.
    </description>

@@ -1,3 +1,6 @@
+import threading
+import time
+
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
@@ -12,12 +15,16 @@ class Object2TextNode(Node):
         self.get_logger().warn('Object To Text Node has been started.')
 
         # Declare parameters
+        self.declare_parameter('text_mode', "0")
+        self.declare_parameter('asr_mode', "0")
         self.declare_parameter('asr_msg_sub_topic_name', "/asr_text")
-        self.declare_parameter('ai_msg_sub_topic_name', '/hobot_dosod')
-        self.declare_parameter('string_msg_pub_topic_name', '/tts_text')
+        self.declare_parameter('ai_msg_sub_topic_name', '/hobot_dnn_detection')
+        self.declare_parameter('string_msg_pub_topic_name', '/prompt_text')
         self.declare_parameter('key_word', '识别')
 
         # Get parameter values
+        self.text_mode = self.get_parameter('text_mode').get_parameter_value().integer_value
+        self.asr_mode = self.get_parameter('asr_mode').get_parameter_value().integer_value
         self.asr_msg_sub_topic_name = self.get_parameter('asr_msg_sub_topic_name').get_parameter_value().string_value
         self.ai_msg_sub_topic_name = self.get_parameter('ai_msg_sub_topic_name').get_parameter_value().string_value
         self.string_msg_pub_topic_name = self.get_parameter('string_msg_pub_topic_name').get_parameter_value().string_value
@@ -35,6 +42,9 @@ class Object2TextNode(Node):
         self.num_detection_results_needed = 5
 
         self.category_map = {
+            "buzz lightyear": "巴斯光年",
+            "woody": "胡迪",
+            "jessie": "杰西",
             "desk": "办公桌",
             "chair": "椅子",
             "conference table": "会议桌",
@@ -76,14 +86,20 @@ class Object2TextNode(Node):
             "packaging box": "包装盒",
             "box": "盒子"
         }
-        # ============ 3) 订阅 /asr_text 以及 /hobot_dosod =============
-        # 当ASR有新的文本时，开启一次“等待处理DOSOD结果”的流程
-        self.subscription_asr = self.create_subscription(
-            String,
-            self.asr_msg_sub_topic_name,
-            self.asr_callback,
-            10
-        )
+
+        if self.asr_mode:
+            # ============ 3) 订阅 /asr_text 以及 /hobot_dosod =============
+            # 当ASR有新的文本时，开启一次“等待处理DOSOD结果”的流程
+            self.subscription_asr = self.create_subscription(
+                String,
+                self.asr_msg_sub_topic_name,
+                self.asr_callback,
+                10
+            )
+        else:
+            self.task = threading.Thread(target=self.eye_thread, daemon=True)
+            self.task.start()
+
 
         # 持续接受DOSOD检测结果，但只有当active==True时我们才真正处理
         self.subscription_dosod = self.create_subscription(
@@ -96,6 +112,15 @@ class Object2TextNode(Node):
         # ============ 4) 负责发布最终中文句子 =============
         self.publisher = self.create_publisher(String, self.string_msg_pub_topic_name, 10)
 
+
+    def eye_thread(self):
+        while True:
+            print("执行任务", time.strftime("%H:%M:%S"))
+            time.sleep(10)  # 每隔 10 秒执行一次
+            self.active = True
+            self.english = False
+            self.detection_count = 0
+            self.obj_counter.clear()
 
     def asr_callback(self, msg: String):
         """
@@ -189,7 +214,8 @@ class Object2TextNode(Node):
         """
         # 如果统计结果是空，直接输出“没检测到”
         if len(self.obj_counter) == 0:
-            self.publish_result("我什么都没有检测到呀！")
+            if self.asr_mode:
+                self.publish_result("我什么都没有检测到呀！")
             return
 
         # 拼装句子，示例格式：
@@ -208,11 +234,19 @@ class Object2TextNode(Node):
 
             if len(sentence_parts) == 1:
                 # 只有一种物体
-                final_sentence = f"我看到了 {sentence_parts[0]}！"
+                if self.text_mode == 0:
+                    final_sentence = f"{sentence_parts[0]}"
+                else:
+                    final_sentence = f"我看到了 {sentence_parts[0]}！"
             else:
                 # 多种物体，用"、"做分隔
-                middle_text = "、".join(sentence_parts[:-1])  # 前面拼在一起
-                final_sentence = f"我看到 {middle_text}，还有 {sentence_parts[-1]}！"
+                middle_text = ",".join(sentence_parts[:-1])  # 前面拼在一起
+
+                if self.text_mode == 0:
+                    final_sentence = f"{middle_text}, {sentence_parts[-1]}"
+                else:
+                    final_sentence = f"我看到 {middle_text}, 还有 {sentence_parts[-1]}！"
+                
         else:
             for i, (obj_type, count) in enumerate(self.obj_counter.items()):
                 # 翻译成中文类别
@@ -226,11 +260,20 @@ class Object2TextNode(Node):
 
             if len(sentence_parts) == 1:
                 # 只有一种物体
-                final_sentence = f"There is a {sentence_parts[0]}."
+                
+                if self.text_mode == 0:
+                    final_sentence = f"{sentence_parts[0]}"
+                else:
+                    final_sentence = f"There is {sentence_parts[0]}."
             else:
                 # 多种物体，用"、"做分隔
                 middle_text = ", ".join(sentence_parts[:-1])  # 前面拼在一起
-                final_sentence = f"There are {middle_text}，and {sentence_parts[-1]}."
+                
+                if self.text_mode == 0:
+                    final_sentence = f"{middle_text} and {sentence_parts[-1]}."
+                else:
+                    final_sentence = f"There are {middle_text}, and {sentence_parts[-1]}."
+
         self.publish_result(final_sentence)
 
     def publish_result(self, text: str):
